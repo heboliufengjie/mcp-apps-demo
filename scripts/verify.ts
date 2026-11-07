@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
-import { access, mkdir } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { chromium } from "playwright-core";
+import { mkdir } from "node:fs/promises";
 import { createMcpApp, TOOL_NAME, UI_URI } from "../src/server.js";
 import { startServer } from "../src/main.js";
+import { launchBrowser } from "./browser.js";
 
 const results: string[] = [];
 
@@ -72,36 +71,7 @@ async function verifyRendering() {
   section("[2/2] 浏览器端渲染验证（官方 AppBridge + 沙箱 iframe）");
   const server = await startServer({ port: 0 });
 
-  const localLibs = fileURLToPath(
-    new URL("../.browser-libs/root/usr/lib/x86_64-linux-gnu", import.meta.url),
-  );
-  const localFonts = fileURLToPath(
-    new URL("../.browser-libs/fonts.conf", import.meta.url),
-  );
-  let libraryPath = process.env.LD_LIBRARY_PATH;
-  let fontConfig: string | undefined;
-  try {
-    await access(localLibs);
-    libraryPath = [localLibs, libraryPath].filter(Boolean).join(":");
-  } catch {
-    // Browser libraries are either installed system-wide or not needed.
-  }
-  try {
-    await access(localFonts);
-    fontConfig = localFonts;
-  } catch {
-    // CJK fonts are either installed system-wide or not needed.
-  }
-
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
-    env: {
-      ...process.env,
-      ...(libraryPath ? { LD_LIBRARY_PATH: libraryPath } : {}),
-      ...(fontConfig ? { FONTCONFIG_FILE: fontConfig } : {}),
-    },
-  });
+  const browser = await launchBrowser();
 
   try {
     const page = await browser.newPage({
@@ -114,7 +84,7 @@ async function verifyRendering() {
     });
     page.on("pageerror", (error) => consoleErrors.push(error.message));
 
-    await page.goto(server.url, { waitUntil: "domcontentloaded" });
+    await page.goto(`${server.url}/mcp-demo`, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("#run:not([disabled])", { timeout: 10_000 });
 
     const toolName = await page.textContent("#tool-name");
