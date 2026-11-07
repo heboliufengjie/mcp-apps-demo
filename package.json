@@ -1,0 +1,31 @@
+{
+  "name": "mcp-apps-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild host/main.ts --bundle --format=esm --outfile=public/host.js --platform=browser --sourcemap",
+    "start": "pnpm build && tsx src/main.ts",
+    "dev": "tsx src/main.ts",
+    "verify": "pnpm build && tsx scripts/verify.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@modelcontextprotocol/ext-apps": "^2.0.4",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.50.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

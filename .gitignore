@@ -1,0 +1,5 @@
+node_modules/
+public/host.js
+public/host.js.map
+artifacts/
+.browser-libs/
