@@ -12,7 +12,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { Check, Copy } from "lucide-react";
 import { extractText } from "../utils/format";
-import { ChartBlock } from "./ChartBlock";
+import { McpVisualization } from "./McpVisualization";
 import { GenerativeUI } from "./GenerativeUI";
 import { TableBlock } from "./TableBlock";
 
@@ -78,7 +78,11 @@ export function Markdown({ content }: { content: string }) {
         }
 
         if (language === "chart") {
-          return <ChartBlock raw={raw} />;
+          try {
+            return <McpVisualization blocks={[{ type: "chart", chart: JSON.parse(raw) as Record<string, unknown> }]} />;
+          } catch {
+            return <div className="chart-error">图表数据不是合法 JSON</div>;
+          }
         }
 
         return (

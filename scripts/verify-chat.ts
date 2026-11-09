@@ -17,11 +17,12 @@ try {
 
   const consoleErrors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
+    if (message.type() === "error") consoleErrors.push(`${message.location().url}: ${message.text()}`);
   });
   page.on("pageerror", (error) => consoleErrors.push(error.message));
 
   await page.addInitScript(() => {
+    if (window.top !== window) return;
     localStorage.setItem(
       "deepseek-compare.settings.v1",
       JSON.stringify({
@@ -49,25 +50,27 @@ try {
   );
   pass("流式回答完成", "mock SSE");
 
-  const generativeUi = page.locator("[data-testid=generative-ui]");
-  assert.equal(await generativeUi.count(), 1, "生成式 UI 块数量");
+  const generativeUi = page.locator("[data-testid=mcp-visualization]");
+  assert.equal(await generativeUi.count(), 1, "MCP App 数量");
+  const uiFrame = page.frameLocator("[data-testid=mcp-visualization]");
+  await uiFrame.locator('html[data-rendered="true"]').waitFor({ state: "attached", timeout: 20_000 });
   assert.equal(
-    await page.locator("[data-testid=ui-metrics] .ui-metric").count(),
+    await uiFrame.locator(".metric").count(),
     3,
     "指标卡数量",
   );
   assert.equal(
-    await page.locator("[data-testid=ui-chart] svg").count(),
+    await uiFrame.locator(".chart svg").count(),
     1,
     "生成式图表数量",
   );
   assert.equal(
-    await page.locator("[data-testid=ui-table] tbody tr").count(),
+    await uiFrame.locator("tbody tr").count(),
     5,
     "生成式表格行数",
   );
   assert.equal(
-    await page.locator("[data-testid=ui-callout]").count(),
+    await uiFrame.locator(".callout").count(),
     1,
     "结论卡数量",
   );
@@ -146,7 +149,7 @@ try {
     /可视化版本/,
   );
   assert.equal(
-    await page.locator("[data-testid=generative-ui]").count(),
+    await page.locator("[data-testid=mcp-visualization]").count(),
     2,
     "可视化消息也应渲染生成式 UI",
   );

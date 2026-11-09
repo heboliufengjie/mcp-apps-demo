@@ -144,9 +144,6 @@ export function Sidebar({
       </nav>
 
       <div className="sidebar-foot">
-        <a className="mcp-link" href="/mcp-demo">
-          MCP Apps 渲染验证
-        </a>
         <div className="user-row">
           <span className="avatar">L</span>
           <div>

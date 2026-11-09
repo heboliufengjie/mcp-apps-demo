@@ -29,18 +29,6 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 const STATIC_FILES: Record<string, { path: string; type: string }> = {
-  "/mcp-demo": {
-    path: `${ROOT}host/index.html`,
-    type: "text/html; charset=utf-8",
-  },
-  "/host.js": {
-    path: `${ROOT}public/host.js`,
-    type: "text/javascript; charset=utf-8",
-  },
-  "/host.js.map": {
-    path: `${ROOT}public/host.js.map`,
-    type: "application/json; charset=utf-8",
-  },
   "/vendor/app-with-deps.js": {
     path: `${ROOT}node_modules/@modelcontextprotocol/ext-apps/dist/src/app-with-deps.js`,
     type: "text/javascript; charset=utf-8",
@@ -338,6 +326,11 @@ export async function startServer(options: ServerOptions = {}) {
         }
       }
 
+      if (url.pathname === "/mcp-demo") {
+        sendJson(res, 404, { error: "This example is now integrated into the chat page." });
+        return;
+      }
+
       if (req.method === "GET" && !extname(url.pathname)) {
         const indexPath = resolve(WEB_DIST, "index.html");
         if (await serveFile(res, indexPath, "no-store")) return;
@@ -390,5 +383,4 @@ if (isDirectRun) {
   console.log(
     `DeepSeek 对比台: ${url}${mock ? " (mock 模式)" : ""}`,
   );
-  console.log(`MCP Apps 验证页: ${url}/mcp-demo`);
 }

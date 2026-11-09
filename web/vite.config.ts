@@ -13,14 +13,6 @@ export default defineConfig({
         target: "http://127.0.0.1:3080",
         changeOrigin: false,
       },
-      "/mcp-demo": {
-        target: "http://127.0.0.1:3080",
-        changeOrigin: false,
-      },
-      "/host.js": {
-        target: "http://127.0.0.1:3080",
-        changeOrigin: false,
-      },
       "/vendor": {
         target: "http://127.0.0.1:3080",
         changeOrigin: false,

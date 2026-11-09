@@ -17,9 +17,6 @@ importers:
       '@modelcontextprotocol/server':
         specifier: ^2.4.0
         version: 2.4.0
-      echarts:
-        specifier: ^6.1.0
-        version: 6.1.0
       idb-keyval:
         specifier: ^6.3.0
         version: 6.3.0
@@ -69,9 +66,6 @@ importers:
       concurrently:
         specifier: ^9.2.5
         version: 9.2.5
-      esbuild:
-        specifier: ^0.28.2
-        version: 0.28.2
       playwright-core:
         specifier: ^1.50.0
         version: 1.65.0
