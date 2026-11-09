@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Check,
-  Columns2,
   Copy,
   RefreshCw,
   Sparkles,
@@ -17,7 +16,6 @@ interface Props {
   message: ChatMessage;
   canRegenerate: boolean;
   onRegenerate: () => void;
-  onCompare: () => void;
   onVisualize: () => void;
 }
 
@@ -25,7 +23,6 @@ export function MessageItem({
   message,
   canRegenerate,
   onRegenerate,
-  onCompare,
   onVisualize,
 }: Props) {
   const [copied, setCopied] = useState(false);
@@ -119,15 +116,6 @@ export function MessageItem({
               <Sparkles size={14} />
               可视化
             </button>
-          ) : null}
-          {message.content ? (
-            <button type="button" onClick={onCompare} title="与官方回答对比">
-              <Columns2 size={14} />
-              对比官方
-            </button>
-          ) : null}
-          {message.comparison ? (
-            <span className="compared-badge">已保存对比</span>
           ) : null}
           {message.usage ? (
             <span className="usage">

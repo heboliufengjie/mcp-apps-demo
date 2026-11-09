@@ -15,25 +15,22 @@ try {
   assert.equal((tool?._meta?.ui as { resourceUri?: string })?.resourceUri, CHAT_UI_URI);
   const resource = await app.client.readResource({ uri: CHAT_UI_URI });
   assert.equal(resource.contents[0]?.mimeType, "text/html;profile=mcp-app");
-  const result = await app.client.callTool({ name: CHAT_TOOL_NAME, arguments: { blocks: [{ type: "metrics", items: [{ label: "销售额", value: "286.4 万元" }] }] } });
+  const result = await app.client.callTool({ name: CHAT_TOOL_NAME, arguments: { blocks: [{ type: "callout", text: "验证" }] } });
   assert.equal((result.structuredContent as { blocks: unknown[] }).blocks.length, 1);
-  console.log("PASS MCP Apps 工具、UI 资源与 structuredContent");
+  console.log("PASS MCP Apps 工具、UI 资源与 JSON 解析");
 } finally { await app.close(); }
 
-const server = await startServer({ port: 0, mock: true });
+const server = await startServer({ port: 0 });
 const browser = await launchBrowser();
 try {
   const page = await browser.newPage();
   await page.goto(server.url, { waitUntil: "networkidle" });
-  await page.fill("[data-testid=composer-input]", "用图表展示本月销售数据");
-  await page.click("[data-testid=send-button]");
-  await page.waitForSelector("[data-testid=assistant-message][data-status=done]", { timeout: 20000 });
-  const frame = page.frameLocator('[data-testid="mcp-visualization"]');
-  await frame.locator('html[data-rendered="true"]').waitFor({ state: "attached", timeout: 20000 });
-  assert.equal(await frame.locator(".metric").count(), 3);
-  assert.equal(await frame.locator(".chart svg").count(), 1);
-  assert.equal(await frame.locator("tbody tr").count(), 5);
-  assert.equal(await frame.locator(".callout").count(), 1);
+  await page.locator("[data-testid=empty-state]").waitFor();
   assert.equal(await page.locator('a[href="/mcp-demo"]').count(), 0);
-  console.log("PASS 单入口聊天页通过 MCP Apps 渲染指标、图表、表格和卡片");
+  const config = await page.request.get(`${server.url}/api/config`);
+  const data = await config.json() as Record<string, unknown>;
+  assert.equal("mock" in data, false);
+  const chat = await page.request.post(`${server.url}/api/chat`, { data: { messages: [] } });
+  assert.equal(chat.status(), 401);
+  console.log("PASS 单入口启动，无内置 Mock，缺少 Key 时拒绝聊天请求");
 } finally { await browser.close(); await server.close(); }

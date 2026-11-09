@@ -63,7 +63,7 @@ export function Sidebar({
         <div className="brand">
           <Logo size={26} />
           <span>deepseek</span>
-          <em>对比台</em>
+          <em>MCP Apps</em>
         </div>
         <div className="sidebar-head-actions">
           <button

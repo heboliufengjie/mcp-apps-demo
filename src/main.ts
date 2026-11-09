@@ -4,7 +4,6 @@ import { createServer as createHttpServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createMcpApp } from "./server.js";
-import { mockSearch, streamMockChat } from "./mock.js";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const WEB_DIST = resolve(ROOT, "web/dist");
@@ -38,7 +37,6 @@ const STATIC_FILES: Record<string, { path: string; type: string }> = {
 type ServerOptions = {
   port?: number;
   host?: string;
-  mock?: boolean;
 };
 
 function sendJson(
@@ -127,13 +125,6 @@ async function proxyJson(
   res.end(text);
 }
 
-function startMockStream(
-  res: import("node:http").ServerResponse,
-  body: Record<string, unknown>,
-) {
-  streamMockChat(res, body);
-}
-
 async function proxyChat(
   req: import("node:http").IncomingMessage,
   res: import("node:http").ServerResponse,
@@ -220,7 +211,6 @@ async function proxyChat(
 
 export async function startServer(options: ServerOptions = {}) {
   const app = await createMcpApp();
-  const isMock = options.mock ?? process.env.MOCK_DEEPSEEK === "1";
 
   const httpServer = createHttpServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
@@ -242,22 +232,11 @@ export async function startServer(options: ServerOptions = {}) {
       if (url.pathname === "/api/config" && req.method === "GET") {
         sendJson(res, 200, {
           hasServerKey: Boolean(process.env.DEEPSEEK_API_KEY),
-          mock: isMock,
         });
         return;
       }
 
       if (url.pathname === "/api/models" && req.method === "GET") {
-        if (isMock) {
-          sendJson(res, 200, {
-            object: "list",
-            data: [
-              { id: "deepseek-flash", object: "model" },
-              { id: "deepseek-v4-pro", object: "model" },
-            ],
-          });
-          return;
-        }
         await proxyJson(res, `${DEEPSEEK_BASE}/models`, {
           method: "GET",
           key: getApiKey(req),
@@ -267,10 +246,6 @@ export async function startServer(options: ServerOptions = {}) {
 
       if (url.pathname === "/api/search" && req.method === "POST") {
         const body = await readBody(req);
-        if (isMock) {
-          sendJson(res, 200, mockSearch(String(body.query ?? "")));
-          return;
-        }
         await proxyJson(res, `${DEEPSEEK_BASE}/v1/tools/search`, {
           method: "POST",
           key: getApiKey(req),
@@ -285,8 +260,7 @@ export async function startServer(options: ServerOptions = {}) {
 
       if (url.pathname === "/api/chat" && req.method === "POST") {
         const body = await readBody(req);
-        if (isMock) startMockStream(res, body);
-        else await proxyChat(req, res, body);
+        await proxyChat(req, res, body);
         return;
       }
 
@@ -315,7 +289,7 @@ export async function startServer(options: ServerOptions = {}) {
       }
 
       if (url.pathname === "/health" && req.method === "GET") {
-        sendJson(res, 200, { ok: true, mock: isMock });
+        sendJson(res, 200, { ok: true });
         return;
       }
 
@@ -365,7 +339,6 @@ export async function startServer(options: ServerOptions = {}) {
   return {
     port,
     url: `http://${host}:${port}`,
-    mock: isMock,
     close: async () => {
       await new Promise<void>((resolve, reject) =>
         httpServer.close((error) => (error ? reject(error) : resolve())),
@@ -379,8 +352,6 @@ const isDirectRun =
   process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (isDirectRun) {
-  const { url, mock } = await startServer();
-  console.log(
-    `DeepSeek 对比台: ${url}${mock ? " (mock 模式)" : ""}`,
-  );
+  const { url } = await startServer();
+  console.log(`DeepSeek MCP Apps 聊天台: ${url}`);
 }

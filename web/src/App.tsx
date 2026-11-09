@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchServerConfig, searchWeb, streamChat } from "./api";
 import { ChatView, type ComposerState } from "./components/ChatView";
-import { ComparePanel } from "./components/ComparePanel";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { Sidebar } from "./components/Sidebar";
 import {
@@ -15,23 +14,16 @@ import {
 } from "./storage";
 import type {
   ChatMessage,
-  Comparison,
   Conversation,
   ServerConfig,
   Settings,
 } from "./types";
 import { truncate, uid } from "./utils/format";
 
-interface CompareTarget {
-  message: ChatMessage;
-  question: string;
-}
-
 export function App() {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [serverConfig, setServerConfig] = useState<ServerConfig>({
     hasServerKey: false,
-    mock: false,
   });
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     loadConversations(),
@@ -46,9 +38,6 @@ export function App() {
     () => window.innerWidth > 900,
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [compareTarget, setCompareTarget] = useState<CompareTarget | null>(
-    null,
-  );
   const [toast, setToast] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -202,7 +191,7 @@ export function App() {
 
   const send = (text: string) => {
     if (streaming) return;
-    if (!settings.apiKey && !serverConfig.hasServerKey && !serverConfig.mock) {
+    if (!settings.apiKey && !serverConfig.hasServerKey) {
       setSettingsOpen(true);
       setToast("请先填写 DeepSeek API Key");
       return;
@@ -363,33 +352,6 @@ export function App() {
     );
   };
 
-  const openCompare = (message: ChatMessage) => {
-    if (!activeConversation) return;
-    const index = activeConversation.messages.findIndex(
-      (item) => item.id === message.id,
-    );
-    const question =
-      [...activeConversation.messages.slice(0, Math.max(0, index))]
-        .reverse()
-        .find((item) => item.role === "user")?.content ?? "";
-    setCompareTarget({ message, question });
-  };
-
-  const saveComparison = (comparison: Comparison) => {
-    if (!compareTarget || !activeConversation) return;
-    patchConversation(activeConversation.id, (conversation) => ({
-      ...conversation,
-      updatedAt: Date.now(),
-      messages: conversation.messages.map((message) =>
-        message.id === compareTarget.message.id
-          ? { ...message, comparison }
-          : message,
-      ),
-    }));
-    setCompareTarget(null);
-    setToast("已保存对比");
-  };
-
   const deleteConversation = (id: string) => {
     if (id === activeId && streaming) abortRef.current?.abort();
     setConversations((previous) =>
@@ -405,9 +367,7 @@ export function App() {
           conversations={conversations}
           activeId={activeId}
           hasKey={
-            Boolean(settings.apiKey) ||
-            serverConfig.hasServerKey ||
-            serverConfig.mock
+            Boolean(settings.apiKey) || serverConfig.hasServerKey
           }
           onNew={() => {
             if (streaming) abortRef.current?.abort();
@@ -444,7 +404,6 @@ export function App() {
           setComposerState((state) => ({ ...state, search: !state.search }))
         }
         onRegenerate={regenerate}
-        onCompare={openCompare}
         onVisualize={visualize}
       />
 
@@ -455,15 +414,6 @@ export function App() {
         onClose={() => setSettingsOpen(false)}
         onSave={(next) => setSettings({ ...DEFAULT_SETTINGS, ...next })}
       />
-
-      {compareTarget ? (
-        <ComparePanel
-          message={compareTarget.message}
-          question={compareTarget.question}
-          onClose={() => setCompareTarget(null)}
-          onSave={saveComparison}
-        />
-      ) : null}
 
       {toast ? <div className="toast">{toast}</div> : null}
     </div>

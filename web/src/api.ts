@@ -186,9 +186,9 @@ export async function testConnection(settings: Settings) {
 export async function fetchServerConfig(): Promise<ServerConfig> {
   try {
     const response = await fetch("/api/config");
-    if (!response.ok) return { hasServerKey: false, mock: false };
+    if (!response.ok) return { hasServerKey: false };
     return (await response.json()) as ServerConfig;
   } catch {
-    return { hasServerKey: false, mock: false };
+    return { hasServerKey: false };
   }
 }

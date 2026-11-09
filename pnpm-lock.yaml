@@ -17,9 +17,6 @@ importers:
       '@modelcontextprotocol/server':
         specifier: ^2.4.0
         version: 2.4.0
-      idb-keyval:
-        specifier: ^6.3.0
-        version: 6.3.0
       katex:
         specifier: ^0.16.47
         version: 0.16.47
@@ -768,9 +765,6 @@ packages:
 
   html-url-attributes@3.0.1:
     resolution: {integrity: sha512-ol6UPyBWqsrO6EJySPz2O7ZSr856WDrEzM5zMqp+FJJLGMW35cLYmmZnl0vztAZxRUoNZJFTCohfjuIJ8I4QBQ==}
-
-  idb-keyval@6.3.0:
-    resolution: {integrity: sha512-um+2dgAWmYsu615EXpWVwSmapJhON0G43t3Ka/EVaohzPQXSMqKEqeDK/oIW3Ow+BXaF2PvSc+oBTFp793A5Ow==}
 
   inline-style-parser@0.2.9:
     resolution: {integrity: sha512-IttN8BqKLxzUrnTqHI+/hwAJQItBAUjdoHERCDv+oOuX48VP6bzW8+QjOXSfoevzq3YrYAwX1uLHp8TqO9yIeg==}
@@ -1887,8 +1881,6 @@ snapshots:
   highlight.js@11.11.2: {}
 
   html-url-attributes@3.0.1: {}
-
-  idb-keyval@6.3.0: {}
 
   inline-style-parser@0.2.9: {}
 

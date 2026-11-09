@@ -23,22 +23,6 @@ export interface Usage {
   total_tokens: number;
 }
 
-export interface FeatureFlags {
-  table: boolean;
-  chart: boolean;
-  formula: boolean;
-  code: boolean;
-  ui: boolean;
-}
-
-export interface Comparison {
-  officialText?: string;
-  officialFeatures: FeatureFlags;
-  note?: string;
-  hasImage?: boolean;
-  updatedAt: number;
-}
-
 export interface ChatMessage {
   id: string;
   role: Role;
@@ -51,7 +35,6 @@ export interface ChatMessage {
   createdAt: number;
   status: "streaming" | "done" | "error";
   error?: string;
-  comparison?: Comparison;
   variant?: "visualization";
 }
 
@@ -76,5 +59,4 @@ export interface ChartSpec {
 
 export interface ServerConfig {
   hasServerKey: boolean;
-  mock: boolean;
 }

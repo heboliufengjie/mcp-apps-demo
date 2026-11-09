@@ -22,7 +22,6 @@ interface Props {
   onToggleThinking: () => void;
   onToggleSearch: () => void;
   onRegenerate: (messageId: string) => void;
-  onCompare: (message: ChatMessage) => void;
   onVisualize: (message: ChatMessage) => void;
 }
 
@@ -38,7 +37,6 @@ export function ChatView({
   onToggleThinking,
   onToggleSearch,
   onRegenerate,
-  onCompare,
   onVisualize,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -89,7 +87,6 @@ export function ChatView({
                   !streaming
                 }
                 onRegenerate={() => onRegenerate(message.id)}
-                onCompare={() => onCompare(message)}
                 onVisualize={() => onVisualize(message)}
               />
             ))}

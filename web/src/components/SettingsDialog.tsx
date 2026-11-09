@@ -178,10 +178,6 @@ export function SettingsDialog({
           <p className={`test-result ${result.ok ? "ok" : "error"}`}>
             {result.message}
           </p>
-        ) : serverConfig.mock ? (
-          <p className="test-result ok">
-            当前服务端运行在 mock 模式，无需真实 Key 即可体验界面。
-          </p>
         ) : null}
       </div>
     </div>

@@ -1,10 +1,8 @@
-import { del, get, set } from "idb-keyval";
 import type { Conversation, Settings } from "./types";
 
 const SETTINGS_KEY = "deepseek-compare.settings.v1";
 const CONVERSATIONS_KEY = "deepseek-compare.conversations.v1";
 const ACTIVE_KEY = "deepseek-compare.active.v1";
-const IMAGE_PREFIX = "deepseek-compare.image.";
 
 export const DEFAULT_SETTINGS: Settings = {
   apiKey: "",
@@ -58,16 +56,4 @@ export function loadActiveId(): string | null {
 export function saveActiveId(id: string | null) {
   if (id) localStorage.setItem(ACTIVE_KEY, id);
   else localStorage.removeItem(ACTIVE_KEY);
-}
-
-export async function saveComparisonImage(messageId: string, dataUrl: string) {
-  await set(`${IMAGE_PREFIX}${messageId}`, dataUrl);
-}
-
-export async function loadComparisonImage(messageId: string) {
-  return get<string>(`${IMAGE_PREFIX}${messageId}`);
-}
-
-export async function removeComparisonImage(messageId: string) {
-  await del(`${IMAGE_PREFIX}${messageId}`);
 }

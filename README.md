@@ -1,4 +1,4 @@
-# DeepSeek 对比台 · MCP Apps
+# DeepSeek MCP Apps 聊天台
 
 本地运行的 DeepSeek 风格聊天应用。模型决定何时输出 `ui` 可视化块；聊天页把结构化块送入 MCP 工具，读取 `ui://` 资源，再用官方 `AppBridge` 在沙箱 iframe 中渲染指标卡、图表、表格与提示卡。整个应用只有一个入口：`http://127.0.0.1:3080/`。
 
@@ -11,16 +11,13 @@ pnpm install
 pnpm start
 ```
 
-打开 `http://127.0.0.1:3080/`。开发模式可运行 `pnpm dev`，使用 `http://localhost:5173/`。
-
-不使用 API Key 的演示模式：
+打开 `http://127.0.0.1:3080/`。开发模式需要单独运行：
 
 ```bash
-$env:MOCK_DEEPSEEK="1"
-pnpm start
+pnpm dev
 ```
 
-发送任意消息后，Mock 回答会展示指标卡、柱状图、表格和结论卡，并标明数据为演示数据。
+保持命令运行，打开 `http://127.0.0.1:5173/`。开发前端在 `5173`，开发 API 服务在 `3081`，因此可以与已运行的生产服务 `3080` 共存。仅运行 `pnpm start` 不会启动 `5173`。
 
 ## MCP Apps 链路
 
@@ -51,8 +48,8 @@ pnpm build
 pnpm verify
 ```
 
-`pnpm verify` 会验证工具元数据、`ui://` 资源、`structuredContent`，再启动 Mock 聊天并检查沙箱里的指标、图表、表格和提示卡。浏览器验证使用本机 Chrome/Edge，或 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` 指定的 Chromium。
+`pnpm verify` 会验证工具元数据、`ui://` 资源、`structuredContent`、JSON 解析，以及无需 Key 的页面启动与鉴权。浏览器验证使用本机 Chrome/Edge，或 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` 指定的 Chromium。真实聊天需要自己的 DeepSeek API Key。
 
 ## 其他功能
 
-聊天页还支持流式回答、深度思考、官方 Search API、会话本地保存，以及手动回填 DeepSeek 官方回答进行对比。搜索接口按 DeepSeek 平台规则计费。不要把真实 API Key 写入仓库。
+聊天页还支持流式回答、深度思考、官方 Search API、会话本地保存，以及 MCP Apps 可视化。搜索接口按 DeepSeek 平台规则计费。不要把真实 API Key 写入仓库。
