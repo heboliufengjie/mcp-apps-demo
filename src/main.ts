@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
+import { stat } from "node:fs/promises";
 import { createServer as createHttpServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -25,13 +25,6 @@ const MIME_TYPES: Record<string, string> = {
   ".woff2": "font/woff2",
   ".woff": "font/woff",
   ".ttf": "font/ttf",
-};
-
-const STATIC_FILES: Record<string, { path: string; type: string }> = {
-  "/vendor/app-with-deps.js": {
-    path: `${ROOT}node_modules/@modelcontextprotocol/ext-apps/dist/src/app-with-deps.js`,
-    type: "text/javascript; charset=utf-8",
-  },
 };
 
 type ServerOptions = {
@@ -216,19 +209,6 @@ export async function startServer(options: ServerOptions = {}) {
     const url = new URL(req.url ?? "/", "http://localhost");
 
     try {
-      const staticFile = STATIC_FILES[url.pathname];
-      if (staticFile && req.method === "GET") {
-        const body = await readFile(staticFile.path);
-        res.writeHead(200, {
-          "content-type": staticFile.type,
-          "content-length": body.byteLength,
-          "access-control-allow-origin": "*",
-          "cache-control": "no-store",
-        });
-        res.end(body);
-        return;
-      }
-
       if (url.pathname === "/api/config" && req.method === "GET") {
         sendJson(res, 200, {
           hasServerKey: Boolean(process.env.DEEPSEEK_API_KEY),

@@ -4,3 +4,4 @@ public/host.js.map
 artifacts/
 .browser-libs/
 web/dist/
+src/widget/dist/

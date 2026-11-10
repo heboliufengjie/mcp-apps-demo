@@ -6,7 +6,7 @@ import { z } from "zod";
 
 export const CHAT_UI_URI = "ui://chat/visualization.html";
 export const CHAT_TOOL_NAME = "render_chat_visualization";
-const html = readFileSync(new URL("./widget/chat-visualization.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("./widget/dist/chat-visualization.html", import.meta.url), "utf8");
 const blocksSchema = z.array(z.record(z.string(), z.unknown())).min(1).max(20);
 
 export async function createMcpApp() {

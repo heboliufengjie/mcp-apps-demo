@@ -15,6 +15,9 @@ try {
   assert.equal((tool?._meta?.ui as { resourceUri?: string })?.resourceUri, CHAT_UI_URI);
   const resource = await app.client.readResource({ uri: CHAT_UI_URI });
   assert.equal(resource.contents[0]?.mimeType, "text/html;profile=mcp-app");
+  const widgetHtml = resource.contents[0] && "text" in resource.contents[0] ? resource.contents[0].text : "";
+  assert.match(widgetHtml, /<script>/);
+  assert.doesNotMatch(widgetHtml, /WIDGET_SCRIPT|\/vendor\/app-with-deps\.js/);
   const result = await app.client.callTool({ name: CHAT_TOOL_NAME, arguments: { blocks: [{ type: "callout", text: "验证" }] } });
   assert.equal((result.structuredContent as { blocks: unknown[] }).blocks.length, 1);
   console.log("PASS MCP Apps 工具、UI 资源与 JSON 解析");
