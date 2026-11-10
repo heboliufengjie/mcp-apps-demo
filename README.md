@@ -32,13 +32,24 @@ pnpm dev
 | 文件 | 职责 |
 | --- | --- |
 | `src/server.ts` | 注册 MCP 工具与 UI 资源 |
-| `src/widget/chat-visualization.html` | 沙箱中的可视化视图 |
+| `src/widget/chat-visualization.html` | 可视化视图的页面结构与样式模板 |
+| `src/widget/widget.js` | 指标卡、图表等组件的渲染逻辑；从 `@modelcontextprotocol/ext-apps` 导入 SDK |
+| `scripts/build-widget.ts` | 将 SDK 和渲染逻辑打包进独立的 HTML 资源 |
 | `web/src/components/McpVisualization.tsx` | 聊天宿主与 `AppBridge` |
 | `web/src/components/GenerativeUI.tsx` | 模型 `ui` JSON 解析 |
 | `web/src/constants.ts` | 模型输出格式提示 |
 | `scripts/verify.ts` | 协议和浏览器端到端验证 |
 
 工具仍由本地 HTTP 服务承载；模型回复不是 MCP 工具调用本身。宿主在收到模型的结构化内容后调用 MCP 工具，使卡片、图表的交付与渲染遵循 MCP Apps 协议。普通 Markdown 文本、表格和代码继续由聊天前端渲染。
+
+### 修改可视化界面
+
+- 修改图表或其他组件的展现逻辑：编辑 `src/widget/widget.js`。
+- 修改页面结构或样式：编辑 `src/widget/chat-visualization.html`。
+- 修改后运行 `pnpm build:widget`，生成 `src/widget/dist/chat-visualization.html`。这是构建产物，不要直接编辑。
+- 重启服务端后查看效果。`src/server.ts` 在启动时读取构建产物，运行中的服务不会自动更新。`pnpm dev` 启动时会构建一次 widget，但目前不会监听 widget 源文件的后续改动。
+
+`pnpm build` 和 `pnpm start` 也会自动构建 widget，因此正常构建或启动前无需另行运行 `pnpm build:widget`。
 
 ## 验证
 

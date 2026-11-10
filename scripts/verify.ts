@@ -36,4 +36,31 @@ try {
   const chat = await page.request.post(`${server.url}/api/chat`, { data: { messages: [] } });
   assert.equal(chat.status(), 401);
   console.log("PASS 单入口启动，无内置 Mock，缺少 Key 时拒绝聊天请求");
+
+  const now = Date.now();
+  const conversations = [
+    { id: "visual", title: "可视化会话", createdAt: now, updatedAt: now,
+      messages: [{ id: "visual-message", role: "assistant", status: "done", createdAt: now,
+        content: '```ui\n{"blocks":[{"type":"callout","text":"缓存验证"}]}\n```' }] },
+    { id: "plain", title: "普通会话", createdAt: now - 1, updatedAt: now - 1,
+      messages: [{ id: "plain-message", role: "assistant", status: "done", createdAt: now - 1,
+        content: "普通消息" }] },
+  ];
+  await page.evaluate((items) => {
+    localStorage.setItem("deepseek-compare.conversations.v1", JSON.stringify(items));
+    localStorage.setItem("deepseek-compare.active.v1", "visual");
+  }, conversations);
+  const requests = { tools: 0, call: 0, read: 0 };
+  page.on("request", (request) => {
+    const name = new URL(request.url()).pathname.slice(5);
+    if (name in requests) requests[name as keyof typeof requests]++;
+  });
+  await page.reload({ waitUntil: "networkidle" });
+  await page.frameLocator("[data-testid=mcp-visualization]").getByText("缓存验证").waitFor({ state: "attached" });
+  assert.deepEqual(requests, { tools: 1, call: 1, read: 1 });
+  await page.getByRole("button", { name: "普通会话" }).click();
+  await page.getByRole("button", { name: "可视化会话" }).click();
+  await page.frameLocator("[data-testid=mcp-visualization]").getByText("缓存验证").waitFor({ state: "attached" });
+  assert.deepEqual(requests, { tools: 1, call: 1, read: 1 });
+  console.log("PASS 历史会话切换复用 MCP 工具结果和 UI 资源");
 } finally { await browser.close(); await server.close(); }

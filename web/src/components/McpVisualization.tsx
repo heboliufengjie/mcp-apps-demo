@@ -3,6 +3,8 @@ import { AppBridge, PostMessageTransport, getToolUiResourceUri } from "@modelcon
 import type { CallToolResult, ReadResourceResult } from "@modelcontextprotocol/client";
 
 const TOOL = "render_chat_visualization";
+let uiHtmlPromise: Promise<string> | undefined;
+const toolResults = new Map<string, Promise<CallToolResult>>();
 
 async function post<T>(url: string, body: unknown): Promise<T> {
   const response = await fetch(url, {
@@ -12,6 +14,44 @@ async function post<T>(url: string, body: unknown): Promise<T> {
   });
   if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
   return response.json() as Promise<T>;
+}
+
+function getUiHtml(): Promise<string> {
+  if (!uiHtmlPromise) {
+    uiHtmlPromise = (async () => {
+      const discovery = await fetch("/api/tools");
+      if (!discovery.ok) throw new Error(`tools/list: HTTP ${discovery.status}`);
+      const { tools } = await discovery.json() as { tools: Array<{ name: string; _meta?: Record<string, unknown> }> };
+      const tool = tools.find(item => item.name === TOOL);
+      const uri = tool && getToolUiResourceUri(tool);
+      if (!uri) throw new Error("MCP 工具未声明 UI 资源");
+      const resource = await post<ReadResourceResult>("/api/read", { uri });
+      const html = resource.contents[0];
+      if (!html || !("text" in html) || html.mimeType !== "text/html;profile=mcp-app") {
+        throw new Error("MCP App 资源无效");
+      }
+      return html.text;
+    })().catch((error: unknown) => {
+      uiHtmlPromise = undefined;
+      throw error;
+    });
+  }
+  return uiHtmlPromise;
+}
+
+function getToolResult(key: string): Promise<CallToolResult> {
+  let result = toolResults.get(key);
+  if (!result) {
+    result = post<CallToolResult>("/api/call", {
+      name: TOOL,
+      arguments: { blocks: JSON.parse(key) as Record<string, unknown>[] },
+    }).catch((error: unknown) => {
+      toolResults.delete(key);
+      throw error;
+    });
+    toolResults.set(key, result);
+  }
+  return result;
 }
 
 export function McpVisualization({ blocks }: { blocks: Record<string, unknown>[] }) {
@@ -28,19 +68,8 @@ export function McpVisualization({ blocks }: { blocks: Record<string, unknown>[]
     void (async () => {
       try {
         const args = { blocks: JSON.parse(key) as Record<string, unknown>[] };
-        const discovery = await fetch("/api/tools");
-        if (!discovery.ok) throw new Error(`tools/list: HTTP ${discovery.status}`);
-        const { tools } = await discovery.json() as { tools: Array<{ name: string; _meta?: Record<string, unknown> }> };
-        const tool = tools.find(item => item.name === TOOL);
-        const uri = tool && getToolUiResourceUri(tool);
-        if (!uri) throw new Error("MCP 工具未声明 UI 资源");
-        const result = await post<CallToolResult>("/api/call", { name: TOOL, arguments: args });
-        const resource = await post<ReadResourceResult>("/api/read", { uri });
-        const html = resource.contents[0];
-        if (cancelled || !html || !("text" in html) || html.mimeType !== "text/html;profile=mcp-app") {
-          if (!cancelled) throw new Error("MCP App 资源无效");
-          return;
-        }
+        const [result, html] = await Promise.all([getToolResult(key), getUiHtml()]);
+        if (cancelled) return;
         bridge = new AppBridge(null, { name: "chat-host", version: "0.1.0" },
           { serverTools: {}, serverResources: {}, openLinks: {}, logging: {} },
           { hostContext: { theme: "dark", displayMode: "inline", availableDisplayModes: ["inline"], locale: "zh-CN", platform: "web" } });
@@ -54,7 +83,7 @@ export function McpVisualization({ blocks }: { blocks: Record<string, unknown>[]
         bridge.oncalltool = (params) => post<CallToolResult>("/api/call", { name: params.name, arguments: params.arguments ?? {} });
         bridge.onreadresource = (params) => post<ReadResourceResult>("/api/read", { uri: params.uri });
         await bridge.connect(new PostMessageTransport(frame.contentWindow ?? window, frame.contentWindow ?? window));
-        if (!cancelled) frame.srcdoc = html.text;
+        if (!cancelled) frame.srcdoc = html;
       } catch (cause) {
         if (!cancelled) setError(cause instanceof Error ? cause.message : String(cause));
       }

@@ -14,5 +14,5 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts", "host/**/*.ts", "scripts/**/*.ts", "web/src/**/*.ts", "web/src/**/*.tsx", "web/vite.config.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "web/src/**/*.ts", "web/src/**/*.tsx", "web/vite.config.ts"]
 }
